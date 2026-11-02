@@ -226,28 +226,34 @@
     return svg;
   }
 
-  /* ============================== item images (real renders) ============================== */
-  // MinecraftAllImages (MIT) によるレンダー画像。無いID・読み込み失敗時はSVGフォールバック。
+  /* ============================== item images (real renders, via CDN) ============================== */
+  // MinecraftAllImages (MIT) のレンダー画像をURLから直接読み込む（ローカル同梱なし）。
+  // 読み込み順: jsDelivr → raw.githubusercontent → 内蔵SVG アイコン。
   const ICON_FILES = g.ICON_FILES || {};
+  const ICON_SRC = g.ICON_SRC || null;
 
   function iconHTML(id) {
     const img = ICON_FILES[id];
-    if (img) {
-      return `<img class="item-img" data-icid="${esc(id)}" src="icons/${img}.webp" alt="${esc(displayName(id))}" loading="lazy" draggable="false">`;
+    if (img && ICON_SRC && ICON_SRC.base) {
+      return `<img class="item-img" data-icid="${esc(id)}" src="${ICON_SRC.base}${img}.webp" alt="${esc(displayName(id))}" loading="lazy" decoding="async" draggable="false">`;
     }
     return iconSVG(id);
   }
 
-  // 画像が欠けている場合（一部ファイルのみアップロード時など）はSVGに差し戻す
+  // CDNが閲覧できない・画像が無い場合のフォールバック (URL: 予備CDN → SVG)
   document.addEventListener('error', (e) => {
     const t = e.target;
-    if (t && t.tagName === 'IMG' && t.classList && t.classList.contains('item-img')) {
-      const id = t.dataset.icid;
-      if (id) {
-        delete ICON_FILES[id];
-        t.outerHTML = iconSVG(id);
-      }
+    if (!(t && t.tagName === 'IMG' && t.classList && t.classList.contains('item-img'))) return;
+    const id = t.dataset.icid;
+    if (!id) return;
+    const name = ICON_FILES[id];
+    if (name && ICON_SRC && ICON_SRC.fallback && !t.dataset.fbk && t.src.startsWith(ICON_SRC.base)) {
+      t.dataset.fbk = '1';
+      t.src = ICON_SRC.fallback + name + '.webp';
+      return;
     }
+    delete ICON_FILES[id];
+    t.outerHTML = iconSVG(id);
   }, true);
 
   /* ============================== names ============================== */
@@ -903,7 +909,7 @@
     renderHistory();
     if (!USE_COOKIE) {
       const note = document.querySelector('.history-note');
-      if (note) note.textContent = 'この環境ではクッキーが使えないため localStorage に保存されます（GitHub Pages 上ではクッキーに保存されます）';
+      if (note) note.textContent = 'この環境ではクッキーが使えないため localStorage に保存されます（ブラウザで直接開いた場合など）';
     }
   });
 })(typeof self !== 'undefined' ? self : globalThis);
