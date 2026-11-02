@@ -38,7 +38,7 @@ body {
   font-size: 15px;
   line-height: 1.65;
 }
-.page { min-height: 100vh; display: flex; flex-direction: column; max-width: 1080px; margin: 0 auto; padding: 20px 18px 0; }
+.page { min-height: 100vh; display: flex; flex-direction: column; max-width: 1560px; margin: 0 auto; padding: 20px 28px 0; }
 main { flex: 1; display: flex; flex-direction: column; gap: 18px; padding-bottom: 26px; }
 
 /* ---------------- header ---------------- */
@@ -145,12 +145,13 @@ h1 { font-family: var(--font-head); font-size: 26px; margin: 0; letter-spacing: 
 }
 .filter-box input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
 
-.table-scroll { overflow: auto; max-height: 65vh; border: 1px solid var(--line-soft); border-radius: 8px; }
-.mat-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+/* ページ全体スクロール: 内部スクロールなし（広い画面では見出し行が画面上部、合計行が画面下部に追従表示） */
+.table-scroll { overflow: visible; }
+.mat-table { width: 100%; min-width: 640px; border-collapse: collapse; font-variant-numeric: tabular-nums; }
 .mat-table thead th {
   position: sticky; top: 0; z-index: 2;
   background: #2e3136;
-  border-bottom: 2px solid var(--line);
+  box-shadow: inset 0 -2px 0 var(--line);
   font-size: 13px; color: var(--text-sub);
   padding: 0; text-align: left; user-select: none;
 }
@@ -186,8 +187,8 @@ td.col-num { font-weight: 700; font-size: 14.5px; white-space: nowrap; }
 .cell-sub { display: block; font-weight: 400; font-size: 11px; color: var(--text-dim); }
 
 .total-row td {
-  position: sticky; bottom: 0;
-  background: #2e3136; border-top: 2px solid var(--line);
+  position: sticky; bottom: 0; z-index: 2;
+  background: #2e3136; box-shadow: inset 0 2px 0 var(--line);
   font-weight: 700; padding: 10px 14px;
 }
 .total-row .col-item { color: var(--gold); }
@@ -231,7 +232,7 @@ td.col-num { font-weight: 700; font-size: 14.5px; white-space: nowrap; }
 /* ---------------- tooltip ---------------- */
 .tooltip {
   position: fixed; z-index: 100;
-  width: 420px; max-width: calc(100vw - 20px);
+  width: 480px; max-width: calc(100vw - 20px);
   max-height: 78vh; overflow-y: auto;
   background: #202227;
   border: 2px solid #43464d;
@@ -300,6 +301,8 @@ td.col-num { font-weight: 700; font-size: 14.5px; white-space: nowrap; }
 
 /* ---------------- responsive ---------------- */
 @media (max-width: 760px) {
+  .table-scroll { overflow-x: auto; }
+  .mat-table thead th, .total-row td { position: static; }
   .stat-cards { grid-template-columns: 1fr 1fr; }
   .stat-hero { grid-column: 1 / -1; }
   .page { padding: 12px 10px 0; }
