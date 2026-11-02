@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>建材リストビューア | Litematica Material List</title>
+<meta name="description" content="Litematica (.litematic)・バニラ構造 (.nbt)・WorldEdit (.schem) の設計図をアップロードして、建材リスト（日本語名・アイコン・スタック数・シュルカーボックス数つき）を表示するツール">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpolygon points='16,2 29,9 16,16 3,9' fill='%235db94c'/%3E%3Cpolygon points='3,9 16,16 16,29 3,22' fill='%233d7a33'/%3E%3Cpolygon points='16,16 29,9 29,22 16,29' fill='%232c5c25'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="page">
+  <header class="site-header">
+    <div class="logo-wrap">
+      <svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><polygon points="16,2 29,9 16,16 3,9" fill="#5db94c"/><polygon points="3,9 16,16 16,29 3,22" fill="#3d7a33"/><polygon points="16,16 29,9 29,22 16,29" fill="#2c5c25"/><polygon points="11.5,8.5 20,8.5 24,11.5 24,20.5 16,24 8,20.5 8,11.5" fill="none" stroke="#eaf5e4" stroke-width="1.4" opacity=".85"/></svg>
+      <div>
+        <h1>建材リストビューア</h1>
+        <p class="subtitle">Litematica 設計図マテリアルリスト</p>
+      </div>
+    </div>
+    <div class="format-badges" aria-label="対応ファイル形式">
+      <span class="badge">.litematic</span>
+      <span class="badge">.nbt</span>
+      <span class="badge">.schem</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- ============ upload ============ -->
+    <section class="panel" id="upload-section" aria-label="設計図のアップロード">
+      <div class="dropzone" id="dropzone" role="button" tabindex="0" aria-label="設計図ファイルをドラッグ＆ドロップ、またはクリックして選択">
+        <div class="dz-icon" aria-hidden="true">
+          <svg viewBox="0 0 48 48" width="46" height="46"><polygon points="24,4 44,15 24,26 4,15" fill="#6fca5e"/><polygon points="4,15 24,26 24,44 4,33" fill="#4c9a3f"/><polygon points="24,26 44,15 44,33 24,44" fill="#37722d"/><path d="M17 26v-7l7-4 7 4v7" fill="none" stroke="#eaf5e4" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <p class="dz-main">設計図をドラッグ＆ドロップ</p>
+        <p class="dz-sub">クリックしてファイルを選択 / Litematica・バニラ構造・WorldEdit に対応</p>
+        <p class="dz-note">ファイルはブラウザ内で処理されます。サーバーには送信されません。</p>
+      </div>
+      <div class="upload-actions">
+        <button type="button" class="btn" id="btn-browse">ファイルを選択</button>
+        <button type="button" class="btn btn-ghost" id="btn-sample">サンプルの小屋を表示</button>
+        <input type="file" id="file-input" accept=".litematic,.nbt,.schem,.litematic2,.schematic" hidden>
+      </div>
+      <div class="alert alert-error" id="error-box" hidden></div>
+      <div class="alert alert-info" id="info-box" hidden></div>
+    </section>
+
+    <!-- ============ result ============ -->
+    <section id="result-section" hidden>
+      <div class="panel file-summary" id="file-summary">
+        <div class="fs-title">
+          <h2 id="fs-name">設計図</h2>
+          <p id="fs-meta" class="fs-meta"></p>
+        </div>
+        <div class="stat-cards" id="stat-cards">
+          <div class="stat stat-hero">
+            <span class="stat-label">合計ブロック数</span>
+            <span class="stat-value" id="stat-total">0</span>
+          </div>
+          <div class="stat"><span class="stat-label">アイテム種類数</span><span class="stat-value" id="stat-kinds">0</span></div>
+          <div class="stat"><span class="stat-label">スタック合計<span class="hint" title="1スタック = 64個">ⓘ</span></span><span class="stat-value" id="stat-stacks">0</span></div>
+          <div class="stat"><span class="stat-label">シュルカー合計<span class="hint" title="1シュルカーボックス = 27スタック = 1,728個">ⓘ</span></span><span class="stat-value" id="stat-shulkers">0</span></div>
+        </div>
+      </div>
+
+      <div class="panel table-panel">
+        <div class="table-toolbar">
+          <div class="table-note">行にカーソルを合わせると<span class="key-point">レシピと必要素材数</span>を表示 ／ 見出しをクリックで並べ替え（もう一度クリックで逆順）</div>
+          <div class="filter-box">
+            <input type="search" id="filter-input" placeholder="アイテム名で絞り込み…" aria-label="アイテム名で絞り込み">
+          </div>
+        </div>
+        <div class="table-scroll">
+          <table class="mat-table" id="mat-table">
+            <thead>
+              <tr>
+                <th class="th-sortable col-item" data-sort="name" aria-sort="none"><span>アイテム</span><span class="sort-arrow" aria-hidden="true"></span></th>
+                <th class="th-sortable col-num" data-sort="count"><span>個数</span><span class="sort-arrow" aria-hidden="true"></span></th>
+                <th class="th-sortable col-num" data-sort="stack"><span>スタック</span><span class="sort-arrow" aria-hidden="true"></span></th>
+                <th class="th-sortable col-num" data-sort="shulker"><span>シュルカー</span><span class="sort-arrow" aria-hidden="true"></span></th>
+              </tr>
+            </thead>
+            <tbody id="mat-body"></tbody>
+            <tfoot>
+              <tr class="total-row">
+                <td class="col-item">合計 <span id="tfoot-kinds"></span></td>
+                <td class="col-num" id="tfoot-total"></td>
+                <td class="col-num" id="tfoot-stack"></td>
+                <td class="col-num" id="tfoot-shulker"></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ history ============ -->
+    <section class="panel" id="history-section" aria-label="アップロード履歴">
+      <div class="history-head">
+        <h2><svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true" style="vertical-align:-3px"><circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M10 5v5l3.5 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg> アップロード履歴</h2>
+        <span class="history-note">クッキーに保存されます（このブラウザのみ）</span>
+        <button type="button" class="btn btn-mini btn-ghost" id="btn-clear-history">全消去</button>
+      </div>
+      <ul class="history-list" id="history-list"></ul>
+      <p class="history-empty" id="history-empty">履歴はまだありません。設計図をアップロードするとここに表示されます。</p>
+    </section>
+
+    <!-- ============ help ============ -->
+    <section class="panel help-panel" aria-label="使い方">
+      <h2>使い方とヒント</h2>
+      <ul class="help-list">
+        <li><b>対応形式</b>: Litematica <code>.litematic</code> / バニラの構造ブロック <code>.nbt</code> / WorldEdit・Sponge <code>.schem</code>。複数リージョンにも対応しています。</li>
+        <li><b>スタック数</b>は 1 スタック = 64 個、<b>シュルカー数</b>は 1 箱 = 27 スタック（1,728 個）で計算します。</li>
+        <li>空気・洞窟の空気・構造の空白（ストラクチャーボイド）などのブロックは集計から除外しています。</li>
+        <li>行にカーソルを合わせると、そのアイテムのクラフトレシピ（作業台・かまど・石切台）と「必要個数を全部作る」ための素材数、さらに素材を展開した原材料の目安を表示します。</li>
+        <li>Mod 追加ブロックは日本語名が無い場合、ID をそのまま表示します（集計・並べ替えは可能です）。</li>
+        <li>このページの公開方法（GitHub Pages での公開手順）は同梱の <code>README.md</code> を参照してください。</li>
+      </ul>
+      <p class="disclaimer">本ツールは非公式のファンメイドツールです。Minecraft は Mojang Synergies AB の商標であり、本ツールは Mojang とは無関係です。日本語アイテム名は公式の言語ファイルに基づいています。</p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Litematica Material List Viewer — すべての処理はブラウザ内で完結します</p>
+  </footer>
+</div>
+
+<!-- recipe tooltip -->
+<div id="tooltip" class="tooltip" hidden></div>
+
+<script src="js/data-ja.js"></script>
+<script src="js/data-recipes.js"></script>
+<script src="js/data-icons.js"></script>
+<script src="js/data-notes.js"></script>
+<script src="js/data-sample.js"></script>
+<script src="js/nbt.js"></script>
+<script src="js/litematic.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
