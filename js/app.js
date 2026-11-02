@@ -226,6 +226,30 @@
     return svg;
   }
 
+  /* ============================== item images (real renders) ============================== */
+  // MinecraftAllImages (MIT) によるレンダー画像。無いID・読み込み失敗時はSVGフォールバック。
+  const ICON_FILES = g.ICON_FILES || {};
+
+  function iconHTML(id) {
+    const img = ICON_FILES[id];
+    if (img) {
+      return `<img class="item-img" data-icid="${esc(id)}" src="icons/${img}.webp" alt="${esc(displayName(id))}" loading="lazy" draggable="false">`;
+    }
+    return iconSVG(id);
+  }
+
+  // 画像が欠けている場合（一部ファイルのみアップロード時など）はSVGに差し戻す
+  document.addEventListener('error', (e) => {
+    const t = e.target;
+    if (t && t.tagName === 'IMG' && t.classList && t.classList.contains('item-img')) {
+      const id = t.dataset.icid;
+      if (id) {
+        delete ICON_FILES[id];
+        t.outerHTML = iconSVG(id);
+      }
+    }
+  }, true);
+
   /* ============================== names ============================== */
   const NAMES = g.NAMES || {};
   const IS_ITEM = g.IS_ITEM || {};
@@ -445,7 +469,7 @@
       const stackTitle = `${fmt(it.count)}個 = ${Math.floor(it.count / STACK)}スタック + ${it.count % STACK}個`;
       const shTitle = `${fmt(it.count)}個 = ${(it.count / SHULKER).toFixed(3)}シュルカーボックス (${Math.floor(it.count / SHULKER)}箱 + ${fmt(it.count % SHULKER)}個)`;
       return `<tr data-id="${esc(it.id)}" tabindex="0" aria-label="${esc(nm.name)} ${fmt(it.count)}個">
-        <td><div class="item-cell"><div class="item-slot">${iconSVG(it.id)}</div><div class="item-name">${esc(nm.name)}${sub}</div></div></td>
+        <td><div class="item-cell"><div class="item-slot">${iconHTML(it.id)}</div><div class="item-name">${esc(nm.name)}${sub}</div></div></td>
         <td class="col-num">${fmt(it.count)}</td>
         <td class="col-num" title="${stackTitle}">${stackFmt(it.count)}</td>
         <td class="col-num" title="${shTitle}">${shulkerFmt(it.count)}</td>
@@ -486,13 +510,13 @@
 
   function iconCellHTML(id, cls) {
     const nm = displayName(id);
-    return `<div class="tt-gridcell has" title="${esc(nm)}">${iconSVG(id)}</div>`;
+    return `<div class="tt-gridcell has" title="${esc(nm)}">${iconHTML(id)}</div>`;
   }
 
   function buildTooltipHTML(id, count) {
     const nm = nameWithFallback(id);
     const parts = [];
-    parts.push(`<div class="tt-title"><div class="item-slot">${iconSVG(id)}</div>
+    parts.push(`<div class="tt-title"><div class="item-slot">${iconHTML(id)}</div>
       <div><div class="tt-name">${esc(nm.name)}${nm.known ? '' : ' <small style="color:var(--text-dim)">(' + esc(nm.path) + ')</small>'}</div>
       <div><span class="tt-count">${fmt(count)}個</span> <span style="color:var(--text-dim)">= ${stackFmt(count)} = ${(count / SHULKER).toFixed(2)}箱</span></div></div></div>`);
 
