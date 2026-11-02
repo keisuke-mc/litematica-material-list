@@ -13,7 +13,7 @@ Litematica の設計図（`.litematic`）をアップロードすると、日本
   - 対応形式: `.litematic`（Litematica）／ `.nbt`（バニラ構造ブロック 1.13 以降）／ `.schem`（WorldEdit 7 以降 / Sponge v2 以降）
 - **合計ブロック数表示**: 合計ブロック数・アイテム種類数・スタック合計・シュルカーボックス合計
 - **日本語アイテム名**: Mojang 公式の日本語言語ファイルを基にした翻訳（Mod 追加ブロックは ID 表示にフォールバック）
-- **アイコン**: 各ブロックの特徴的な色を使った SVG アイコン（階段・ハーフブロック・ガラス板・松明などの形状も描き分け）
+- **アイコン**: 実際のゲームレンダーによるアイテム画像（[MinecraftAllImages](https://github.com/TinyTank800/MinecraftAllImages) 提供・1,100 種以上）。画像が無い ID は配色・形状を計算した SVG アイコンで代替表示
 - **スタック数・シュルカーボックス数**: 各アイテムについて 1 スタック = 64 個、1 シュルカー = 27 スタック（1,728 個）換算で表示
 - **並べ替え（見出しクリック）**:
   - アイテム名 → 五十音順 ⇄ 逆順（漢字始まりの名前は読み仮名マップでソート）
@@ -38,7 +38,7 @@ Litematica の設計図（`.litematic`）をアップロードすると、日本
 ### 2. ファイルをアップロード
 
 1. 作成したリポジトリのページで **Add file** → **Upload files** をクリック
-2. この ZIP を展開した中身（`index.html`、`css/`、`js/`、`sample.litematic`、`README.md`、`.nojekyll`）をすべてドラッグ
+2. この ZIP を展開した中身（`index.html`、`css/`、`js/`、`icons/`、`sample.litematic`、`README.md`、`.nojekyll`）をすべてドラッグ
    - ※ フォルダごとではなく、中身をリポジトリ直下に置いてください（`index.html` がリポジトリのルートにくる状態）
    - ※ `.nojekyll` は隠しファイルです。Finder / エクスプローラーで表示して一緒にアップロードしてください（なくても動作しますが、GitHub Pages の Jekyll 処理を無効化するため推奨）
 3. **Commit changes** をクリック
@@ -76,9 +76,11 @@ python3 -m http.server 8000
 │   ├── app.js          … UI（ソート・ツールチップ・履歴）
 │   ├── data-ja.js      … 日本語名データ（公式言語ファイルから生成）
 │   ├── data-recipes.js … レシピデータ（crafting: minecraft-data / 精錬・石切台: 手動収集）
-│   ├── data-icons.js   … アイコン用カラーデータ
+│   ├── data-icons.js   … SVG フォールバック用カラーデータ
+│   ├── data-imgicons.js… アイテム画像マニフェスト（ID → icons/ 内の画像）
 │   ├── data-notes.js   … 入手方法メモ
 │   └── data-sample.js  … サンプル設計図（埋め込み）
+├── icons/            … アイテム画像 1,105 枚（webp・約 1.5 MB）
 ├── sample.litematic  … サンプルの小屋（実際にアップロードしても試せます）
 ├── .nojekyll         … GitHub Pages の Jekyll 処理を無効化
 └── README.md         … このファイル
@@ -89,7 +91,7 @@ python3 -m http.server 8000
 - **ビットパッキング**: `.litematic` の BlockStates は Litematica 方式（`bits = max(2, ceil(log2(パレットサイズ)))`、64bit long をまたぐパッキング・LSB ファースト）で解析します。配列長から別方式（1.16 以降のチャンク方式）も自動判定できるため、一部ツールが生成した変種ファイルにも対応します。
 - **集計**: 空気 (`air` / `cave_air` / `void_air`)、`structure_void`、`light`、`barrier` はリストから除外しています。ブロック状態（向きや水没状態など）は同じアイテムとして合算します。
 - **レシピデータ**: クラフトレシピは [PrismarineJS/minecraft-data](https://github.com/PrismarineJS/minecraft-data)（Minecraft 26.1 相当）から生成し、主要レシピ 22 種を自動検証しています。精錬・石切台レシピは手動で収集しています。
-- **アイコン**: Minecraft のテクスチャ画像は使用していらず、ブロック ID から独自の配色・形状を計算して SVG 描画しています。
+- **アイコン**: アイテム画像は [MinecraftAllImages](https://github.com/TinyTank800/MinecraftAllImages)（MIT License）のレンダー（`images-v2/26.2`・128×128 webp）を使用。バニラの全ブロック ID とレシピ素材をカバーし、壁付き看板・ポット植え・作物などの対応はエイリアス解決します。画像が取得できない ID（空気・炎・ポータル類・Mod 追加ブロックなど）は、ブロック ID から独自の配色・形状を計算した SVG アイコンにフォールバックします（画像の読み込みに失敗した場合も自動で SVG に切り替わります）。
 
 ## 動作環境
 
@@ -101,3 +103,4 @@ python3 -m http.server 8000
 - 本ツールは非公式のファンメイドツールです。Minecraft は Mojang Synergies AB の商標であり、本ツールは Mojang とは無関係です。
 - 日本語アイテム名は Mojang 公式の言語ファイル（`ja_jp.json`）に基づきます。
 - レシピデータの一部は PrismarineJS/minecraft-data（MIT License）を利用しています。
+- アイテム画像は [MinecraftAllImages](https://github.com/TinyTank800/MinecraftAllImages)（MIT License, © 2025 TinyTank800）を利用しています。画像は Minecraft ゲームコンテンツのレンダリングであり、Minecraft に関する権利は Mojang Synergies AB に帰属します。
