@@ -65,7 +65,7 @@ python3 -m http.server 8000
 ## 技術メモ
 
 - **ビットパッキング**: `.litematic` の BlockStates は Litematica 方式（`bits = max(2, ceil(log2(パレットサイズ)))`、64bit long をまたぐパッキング・LSB ファースト）で解析します。配列長から別方式（1.16 以降のチャンク方式）も自動判定できるため、一部ツールが生成した変種ファイルにも対応します。
-- **集計**: 空気 (`air` / `cave_air` / `void_air`)、`structure_void`、`light`、`barrier` に加え、ピストンが伸びた際に生成される `piston_head` / `sticky_piston_head`（設置できるアイテムではないため）をリストから除外しています。ブロック状態（向きや水没状態など）は同じアイテムとして合算します。壁付けバリアント（`oak_wall_sign`・`wall_torch`・`white_wall_banner` など）も同じアイテムとして通常版（`oak_sign`・`torch`・`white_banner`）に合算します（対象: 壁付けの看板・吊り看板・旗・サンゴファン・松明・頭・頭蓋骨）。「〇〇_wall」（石レンガの塀など）は独立したアイテムなのでそのまま表示します。
+- **集計**: 空気 (`air` / `cave_air` / `void_air`)、`structure_void`、`light`、`barrier` に加え、ピストンが伸びた際に生成される `piston_head` / `sticky_piston_head`（設置できるアイテムではないため）をリストから除外しています。ブロック状態（向きや水没状態など）は同じアイテムとして合算します。壁付けバリアント（`oak_wall_sign`・`wall_torch`・`white_wall_banner` など）も同じアイテムとして通常版（`oak_sign`・`torch`・`white_banner`）に合算します（対象: 壁付けの看板・吊り看板・旗・サンゴファン・松明・頭・頭蓋骨）。「〇〇_wall」（石レンガの塀など）は独立したアイテムなのでそのまま表示します。設置状態のブロックIDがアイテムIDと異なるもの (`redstone_wire` など) はアイテムID (`minecraft:redstone` = レッドストーンダスト) に統合します。パワー 0〜15 などのブロック状態は区別しません。
 - **レシピデータ**: クラフトレシピは [PrismarineJS/minecraft-data](https://github.com/PrismarineJS/minecraft-data)（Minecraft 26.1 相当）から生成し、主要レシピ 22 種を自動検証しています。精錬・石切台レシピは手動で収集しています。
 - **アイコン**: アイテム画像は [MinecraftAllImages](https://github.com/TinyTank800/MinecraftAllImages)（MIT License）のレンダー（`images-v2/26.2`・128×128 webp）を、**リポジトリの内容を固定したコミットハッシュ付き CDN URL（jsDelivr → raw.githubusercontent の 2 段階）から直接読み込み**ます。画像ファイルは本サイトに同梱していません（配布サイズを削減）。バニラの全ブロック ID とレシピ素材をカバーし、壁付き看板・ポット植え・作物などの対応はエイリアス解決します。CDN に接続できない場合や画像が無い ID（空気・炎・ポータル類・Mod 追加ブロックなど）は、ブロック ID から独自の配色・形状を計算した SVG アイコンに自動フォールバックします。
 
