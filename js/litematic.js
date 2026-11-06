@@ -55,8 +55,17 @@
     "minecraft:white_wall_banner":"minecraft:white_banner", "minecraft:wither_skeleton_wall_skull":"minecraft:wither_skeleton_skull", "minecraft:yellow_wall_banner":"minecraft:yellow_banner",
     "minecraft:zombie_wall_head":"minecraft:zombie_head"
   };
+
+  // 設置されたときのブロックIDが、アイテムとしてのIDと異なるもの。
+  // アイテム形態のIDに統合して集計・表示する (パワー 0-15 などの
+  // ブロック状態は、パレット集計時に最初から区別しない)。
+  // 例: レッドストーンワイヤー(設置状態) -> レッドストーンダスト(アイテム)
+  const BLOCK_TO_ITEM = {
+    "minecraft:redstone_wire": "minecraft:redstone",
+  };
+
   function canonicalId(id) {
-    return WALL_TO_BASE[id] || id;
+    return WALL_TO_BASE[id] || BLOCK_TO_ITEM[id] || id;
   }
 
   const FORMAT_LABEL = {
@@ -298,7 +307,7 @@
     throw new Error('対応していないファイル形式です（.litematic / .nbt / .schem に対応しています）');
   }
 
-  const SchemLib = { parseFile, EXCLUDED, WALL_TO_BASE, canonicalId, FORMAT_LABEL, parseLitematic, parseVanilla, parseSponge };
+  const SchemLib = { parseFile, EXCLUDED, WALL_TO_BASE, BLOCK_TO_ITEM, canonicalId, FORMAT_LABEL, parseLitematic, parseVanilla, parseSponge };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = SchemLib;
   else global.SchemLib = SchemLib;
